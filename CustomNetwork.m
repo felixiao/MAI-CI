@@ -1,53 +1,73 @@
 classdef CustomNetwork
    properties
-      %Hyper Parameters
-      Value {mustBeNumeric}
-      %Datas
+      % Hyper Parameters
+      % Practice
+      Functions    = ["logsig", "logsig", "mse"; "logsig", "softmax", "crossentropy"];
+      Num_HiddenLayerUnits = [50,200,500];
+      Divide_Ratios        = [0.8,0.1,0.1; 0.4,0.2,0.4; 0.1,0.1,0.8];
+      TrainTimes           = 3;
+      
+
+      % Tune
+      LearningRates = [0.01, 0.1, 0.001, 0.0001];        % default 0.01
+      Momentums     = [ 0.8, 0.6,   0.7,    0.9,  0.99]; % default 0.8
+      Num_Epochs    = [1000, 500,  1500,  2000];         % default 1000
+      TrainFunctions       = ["traingdm", "traingdx","trainscg"];
+
+      % Datas
       Inputs
       Outputs
-      TrainData
+
+      % Results
+
       %Net
       Net
-      TrainResult
-      Y
-      E
+      Networks 
+      NetworkType
+
+      logLevel = 1
    end
    methods
        function obj = CustomNetwork(X,T)
            % Custom Network (feedforward)
-           % X is the input
-           % T is the target
-           obj.Net = network( 1, 2,[1; 1],[1; 0],[0 0; 1 0],[0 1]);
-           obj.Net.name = 'Test';
-           obj.Net.layers{1}.size = 10;            % hidden layer size = 50, 200, 500
-           obj.Net.layers{1}.transferFcn = "logsig"; % hidden layer logsig, tansig
-           obj.Net.layers{2}.transferFcn = "softmax"; % output layer logsig, softmax
-           obj.Net.divideFcn = "dividerand";       % divideFCN allow to change the way the data is divided into training, validation and test data sets. 
-           obj.Net.divideParam.trainRatio = 0.8;   % Ratio of data used as training set    0.8；0.4；0.1 
-           obj.Net.divideParam.valRatio = 0.1;     % Ratio of data used as validation set  0.1；0.2；0.1
-           obj.Net.divideParam.testRatio = 0.1;    % Ratio of data used as test set        0.1；0.4；0.8            
-           obj.Net.trainFcn="traingdm";         % Levenberg-Marquardt traingdm; traingdx
-           obj.Net.trainParam.max_fail = 6;    % validation check parameter
-           obj.Net.trainParam.epochs=2000;     % number of epochs parameter 
-           obj.Net.trainParam.min_grad = 1e-5; % minimum performance gradient 
-           obj.Net.trainParam.mc = 0.8;    % momentum parameter
-           obj.Net.trainParam.lr = 0.01;   % learning rate parameter
-           obj.Net.performFcn= "crossentropy"; % crossentropy, mse
-           obj.Net = configure(obj.Net,X,T);
-           
-           obj.Inputs = X;
+           obj.Inputs  = X;
            obj.Outputs = T;
+           obj.NetworkType = 'feedforward';
+           obj.Networks = SingleNetwork();
+           fprintf('Network Type: %s\n',class(obj.Networks)); 
+           obj = obj.Setup();
+           fprintf('Network count: %d\n',length(obj.Networks)); 
        end
- 
+       function obj = Setup(obj)
+           netindex = 0;
+           for transferFcnIdx = 1:obj.Functions.size(1)
+                for numHiddenLayer = obj.Num_HiddenLayerUnits
+                    for divideRatio = 1:length(obj.Divide_Ratios)
+                        netindex = netindex+1;
+                        if obj.logLevel >= 2
+                            fprintf('\nSetup Network: [%d]========================> \nHyperParameters:\n\tLayer [1] TransferFcn=[%s]\n\tLayer [2] TransferFcn=[%s]\n\tCost Function [%s]\n\t[%d] Hidden Units\n\tDivide Into [TrainSet=%d, ValidateSet=%d, TestSet=%d]\n' ...
+                                ,netindex,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3), ...
+                                numHiddenLayer,obj.Divide_Ratios(divideRatio,1)*100,obj.Divide_Ratios(divideRatio,2)*100,obj.Divide_Ratios(divideRatio,3)*100);
+                        end
+                        net = SingleNetwork(numHiddenLayer,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3),obj.Divide_Ratios(divideRatio,1),obj.Divide_Ratios(divideRatio,2),obj.Divide_Ratios(divideRatio,3), ...
+                            'traingdm',1000,0.8,0.01);
+                        
+                        obj.Networks(netindex) = net;
+            
+                        if obj.logLevel >=1
+                            fprintf('\tName: %s\n',obj.Networks(end).network.name);
+                        end
+                    end
+                end
+           end
+           
+       end
+       function obj = Info(obj)
+            
+       end
        function obj = Train(obj)
-           [obj.Net,obj.TrainResult,obj.Y,obj.E]  = train(obj.Net,obj.Inputs,obj.Outputs);
-%            fprintf('Accuracy: %f\n',100-100*sum(abs((obj.Y>0.5)-obj.Outputs))/length(Outputs))
+           obj.Networks(end).Train(obj.Inputs,obj.Outputs,2);
        end
-       function r = roundOff(obj)
-           r = round([obj.Value],2);
-       end
-       function r = multiplyBy(obj,n)
-           r = [obj.Value] * n;
-       end
+       
    end
 end
