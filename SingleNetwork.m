@@ -30,8 +30,11 @@ classdef SingleNetwork
                 obj.network.trainParam.lr     = learning_rate;   % learning rate parameter
                 
                 obj.network.trainParam.goal   = 1e-3;
-
-                obj.network.plotFcns(4)
+                
+                obj.network.plotFcns{1} = 'plotperform';
+                obj.network.plotFcns{2} = 'ploterrhist';
+                obj.network.plotFcns{3} = 'plotconfusion';
+                obj.network.plotFcns{4} = 'plotroc';
                 obj.network.trainParam.show= 50;
 %                 obj.network.trainParam.showCommandLine = true;
 
@@ -65,7 +68,7 @@ classdef SingleNetwork
 %                 path = sprintf('./Results/%s',obj.network.name);
 %                 obj.trainResults(t).Save(path);
             end
-
        end
+       
    end
 end

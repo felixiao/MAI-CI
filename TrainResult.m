@@ -70,7 +70,6 @@ classdef TrainResult
                 obj.Perform_Test  = mean(TR.tperf);
     
                 obj.TrainTime = TT;
-
             end
     
         end
@@ -83,7 +82,6 @@ classdef TrainResult
             fprintf('Val   Result:\tCount= %d\tMatches= %d\tAccuracy= %.3f%%\tPerformance= %.3f%%\n',length(obj.TR.valInd)  ,obj.Matches_Val  ,obj.Accuracy_Val*100  ,obj.Perform_Val*100);
             fprintf('Test  Result:\tCount= %d\tMatches= %d\tAccuracy= %.3f%%\tPerformance= %.3f%%\n',length(obj.TR.testInd) ,obj.Matches_Test ,obj.Accuracy_Test*100 ,obj.Perform_Test*100);
             
-%             plotconfusion(obj.Class_Test_Y,obj.Class_Test_T);
         end
     end
 end

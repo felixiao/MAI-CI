@@ -2,17 +2,17 @@ classdef CustomNetwork
    properties
       % Hyper Parameters
       % Practice
-      Functions    = ["logsig", "logsig", "mse"; "logsig", "softmax", "crossentropy"];
-      Num_HiddenLayerUnits = [50,200,500];
-      Divide_Ratios        = [0.8,0.1,0.1; 0.4,0.2,0.4; 0.1,0.1,0.8];
-      TrainTimes           = 3;
+      Functions    = ["logsig", "logsig", "mse"; "logsig", "softmax", "crossentropy"]; % default logsig logsig mse
+      Num_HiddenLayerUnits = [50,200,500];% default 50
+      Divide_Ratios        = [0.8,0.1,0.1; 0.4,0.2,0.4; 0.1,0.1,0.8]; %default 0.8
+      TrainTimes           = 3; % default 3
       
 
       % Tune
-      LearningRates = [0.01, 0.1, 0.001, 0.0001];        % default 0.01
-      Momentums     = [ 0.8, 0.6,   0.7,    0.9,  0.99]; % default 0.8
-      Num_Epochs    = [1000, 5000,  1500,  2000];         % default 1000
-      TrainFunctions       = ["traingdm", "traingdx","trainscg"];
+      LearningRates  = [0.01, 0.1, 0.001, 0.0001];        % default 0.01
+      Momentums      = [ 0.8, 0.6,   0.7,    0.9,  0.99]; % default 0.8
+      Num_Epochs     = [1000, 5000,  1500,  2000];         % default 1000
+      TrainFunctions = ["traingdm", "traingdx","trainscg"]; % default traingdm
 
       % Datas
       Inputs
@@ -32,7 +32,7 @@ classdef CustomNetwork
            % Custom Network (feedforward)
            obj.Inputs  = X;
            obj.Outputs = T;
-           obj.NetworkType = 'feedforward';
+           obj.NetworkType = 'FFNN';
            obj.Networks = SingleNetwork();
            obj = obj.Setup();
            fprintf('Network Count: %d\n',length(obj.Networks));
@@ -48,7 +48,7 @@ classdef CustomNetwork
                                 ,netindex,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3), ...
                                 numHiddenLayer,obj.Divide_Ratios(divideRatio,1)*100,obj.Divide_Ratios(divideRatio,2)*100,obj.Divide_Ratios(divideRatio,3)*100);
                         end
-                        net = SingleNetwork('FFNN',numHiddenLayer,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3),obj.Divide_Ratios(divideRatio,1),obj.Divide_Ratios(divideRatio,2),obj.Divide_Ratios(divideRatio,3), ...
+                        net = SingleNetwork(obj.NetworkType,numHiddenLayer,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3),obj.Divide_Ratios(divideRatio,1),obj.Divide_Ratios(divideRatio,2),obj.Divide_Ratios(divideRatio,3), ...
                             'traingdm',50,0.8,0.01);
                         
                         obj.Networks(netindex) = net;
@@ -61,12 +61,13 @@ classdef CustomNetwork
            end
        end
        function obj = TrainAll(obj)
-           fprintf('Network Info: %s',obj.Networks(index).network.userdata.note); 
-           obj.Networks(index).Train(obj.Inputs,obj.Outputs,1);
+           for index = 1:length(obj.Networks)
+                obj = obj.Train(index);
+           end
        end
        function obj = Train(obj,index)
            fprintf('Network Info: %s',obj.Networks(index).network.userdata.note); 
-           obj.Networks(index).Train(obj.Inputs,obj.Outputs,1);
+           obj.Networks(index) = obj.Networks(index).Train(obj.Inputs,obj.Outputs,obj.TrainTimes);
        end
        
    end
