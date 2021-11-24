@@ -11,7 +11,7 @@ classdef CustomNetwork
       % Tune
       LearningRates = [0.01, 0.1, 0.001, 0.0001];        % default 0.01
       Momentums     = [ 0.8, 0.6,   0.7,    0.9,  0.99]; % default 0.8
-      Num_Epochs    = [1000, 500,  1500,  2000];         % default 1000
+      Num_Epochs    = [1000, 5000,  1500,  2000];         % default 1000
       TrainFunctions       = ["traingdm", "traingdx","trainscg"];
 
       % Datas
@@ -34,9 +34,9 @@ classdef CustomNetwork
            obj.Outputs = T;
            obj.NetworkType = 'feedforward';
            obj.Networks = SingleNetwork();
-           fprintf('Network Type: %s\n',class(obj.Networks)); 
            obj = obj.Setup();
-           fprintf('Network count: %d\n',length(obj.Networks)); 
+           fprintf('Network Count: %d\n',length(obj.Networks)); 
+           fprintf('Network Info: %s',obj.Networks(1).network.userdata.note); 
        end
        function obj = Setup(obj)
            netindex = 0;
@@ -49,24 +49,20 @@ classdef CustomNetwork
                                 ,netindex,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3), ...
                                 numHiddenLayer,obj.Divide_Ratios(divideRatio,1)*100,obj.Divide_Ratios(divideRatio,2)*100,obj.Divide_Ratios(divideRatio,3)*100);
                         end
-                        net = SingleNetwork(numHiddenLayer,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3),obj.Divide_Ratios(divideRatio,1),obj.Divide_Ratios(divideRatio,2),obj.Divide_Ratios(divideRatio,3), ...
-                            'traingdm',1000,0.8,0.01);
+                        net = SingleNetwork('PTNN',numHiddenLayer,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3),obj.Divide_Ratios(divideRatio,1),obj.Divide_Ratios(divideRatio,2),obj.Divide_Ratios(divideRatio,3), ...
+                            'traingdm',500,0.8,0.01);
                         
                         obj.Networks(netindex) = net;
             
                         if obj.logLevel >=1
-                            fprintf('\tName: %s\n',obj.Networks(end).network.name);
+                            fprintf('[%d]\tName: %s\n',netindex,obj.Networks(end).network.name);
                         end
                     end
                 end
            end
-           
-       end
-       function obj = Info(obj)
-            
        end
        function obj = Train(obj)
-           obj.Networks(end).Train(obj.Inputs,obj.Outputs,2);
+           obj.Networks(11).Train(obj.Inputs,obj.Outputs,3);
        end
        
    end
