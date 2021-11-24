@@ -70,15 +70,20 @@ classdef TrainResult
                 obj.Perform_Test  = mean(TR.tperf);
     
                 obj.TrainTime = TT;
+
             end
     
         end
+        function obj = Save(obj,path)
+            save(path,obj.Class_Test_T);
+        end
         function obj = ShowResult(obj)
+            fprintf('TrainingTime: %.3f Seconds\n',obj.TrainTime);
             fprintf('Train Result:\tCount= %d\tMatches= %d\tAccuracy= %.3f%%\tPerformance= %.3f%%\n',length(obj.TR.trainInd),obj.Matches_Train,obj.Accuracy_Train*100,obj.Perform_Train*100);
             fprintf('Val   Result:\tCount= %d\tMatches= %d\tAccuracy= %.3f%%\tPerformance= %.3f%%\n',length(obj.TR.valInd)  ,obj.Matches_Val  ,obj.Accuracy_Val*100  ,obj.Perform_Val*100);
             fprintf('Test  Result:\tCount= %d\tMatches= %d\tAccuracy= %.3f%%\tPerformance= %.3f%%\n',length(obj.TR.testInd) ,obj.Matches_Test ,obj.Accuracy_Test*100 ,obj.Perform_Test*100);
-            fprintf('TrainingTime: %.3f Seconds\n',obj.TrainTime);
-            plotconfusion(obj.Class_Test_Y,obj.Class_Test_T);
+            
+%             plotconfusion(obj.Class_Test_Y,obj.Class_Test_T);
         end
     end
 end

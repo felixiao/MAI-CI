@@ -35,8 +35,7 @@ classdef CustomNetwork
            obj.NetworkType = 'feedforward';
            obj.Networks = SingleNetwork();
            obj = obj.Setup();
-           fprintf('Network Count: %d\n',length(obj.Networks)); 
-           fprintf('Network Info: %s',obj.Networks(1).network.userdata.note); 
+           fprintf('Network Count: %d\n',length(obj.Networks));
        end
        function obj = Setup(obj)
            netindex = 0;
@@ -49,8 +48,8 @@ classdef CustomNetwork
                                 ,netindex,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3), ...
                                 numHiddenLayer,obj.Divide_Ratios(divideRatio,1)*100,obj.Divide_Ratios(divideRatio,2)*100,obj.Divide_Ratios(divideRatio,3)*100);
                         end
-                        net = SingleNetwork('PTNN',numHiddenLayer,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3),obj.Divide_Ratios(divideRatio,1),obj.Divide_Ratios(divideRatio,2),obj.Divide_Ratios(divideRatio,3), ...
-                            'traingdm',500,0.8,0.01);
+                        net = SingleNetwork('FFNN',numHiddenLayer,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3),obj.Divide_Ratios(divideRatio,1),obj.Divide_Ratios(divideRatio,2),obj.Divide_Ratios(divideRatio,3), ...
+                            'traingdm',50,0.8,0.01);
                         
                         obj.Networks(netindex) = net;
             
@@ -61,8 +60,13 @@ classdef CustomNetwork
                 end
            end
        end
-       function obj = Train(obj)
-           obj.Networks(11).Train(obj.Inputs,obj.Outputs,3);
+       function obj = TrainAll(obj)
+           fprintf('Network Info: %s',obj.Networks(index).network.userdata.note); 
+           obj.Networks(index).Train(obj.Inputs,obj.Outputs,1);
+       end
+       function obj = Train(obj,index)
+           fprintf('Network Info: %s',obj.Networks(index).network.userdata.note); 
+           obj.Networks(index).Train(obj.Inputs,obj.Outputs,1);
        end
        
    end
