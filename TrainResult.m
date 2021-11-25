@@ -55,7 +55,8 @@ classdef TrainResult
                 [~,obj.Class_Train_T] = max(obj.Train_T, [], 1);
                 [~,obj.Class_Val_T]   = max(obj.Val_T, [], 1);
                 [~,obj.Class_Test_T]  = max(obj.Test_T, [], 1);
-        
+                
+    
                 obj.Matches_Train  = sum((obj.Class_Train_Y ==obj.Class_Train_T));
                 obj.Accuracy_Train = obj.Matches_Train / size(obj.Class_Train_T,2);
         
@@ -73,15 +74,37 @@ classdef TrainResult
             end
     
         end
-        function obj = Save(obj,path)
-            save(path,obj.Class_Test_T);
+        function obj = Save(obj,path,filename)
+            Train_Y      = obj.Train_Y;
+            Val_Y        = obj.Val_Y;
+            Test_Y       = obj.Test_Y;
+            Train_T      = obj.Train_T;
+            Val_T        = obj.Val_T;
+            Test_T       = obj.Test_T;
+
+            ClassTable_Train = table(obj.TR.trainInd',obj.Class_Train_T',obj.Class_Train_Y','VariableNames',{'Index','Target','Predict'});
+            ClassTable_Val   = table(obj.TR.valInd',obj.Class_Val_T',obj.Class_Val_Y','VariableNames',{'Index','Target','Predict'});
+            ClassTable_Test  = table(obj.TR.testInd',obj.Class_Test_T',obj.Class_Test_Y','VariableNames',{'Index','Target','Predict'});
+
+            Matches     = [obj.Matches_Train;obj.Matches_Val;obj.Matches_Test];
+            Accuracy    = [obj.Accuracy_Train;obj.Accuracy_Val;obj.Accuracy_Test];
+            Performance = [obj.Perform_Train;obj.Perform_Val;obj.Perform_Test];
+            ResultTable = table(Matches,Accuracy,Performance,'VariableNames',{'Matches','Accuracy','Performance'},'RowNames',{'Train','Val','Test'});
+            TrainTime   = obj.TrainTime;
+            f = sprintf('%s/%s',path,filename);
+            if ~exist(path, 'dir')
+                mkdir(path);
+            end
+            save(f,'Train_Y', 'Val_Y','Test_Y', ...
+                'Train_T','Val_T','Test_T', ...
+                'ClassTable_Train','ClassTable_Val','ClassTable_Test','ResultTable', 'TrainTime');
+            
         end
         function obj = ShowResult(obj)
-            fprintf('TrainingTime: %.3f Seconds\n',obj.TrainTime);
             fprintf('Train Result:\tCount= %d\tMatches= %d\tAccuracy= %.3f%%\tPerformance= %.3f%%\n',length(obj.TR.trainInd),obj.Matches_Train,obj.Accuracy_Train*100,obj.Perform_Train*100);
             fprintf('Val   Result:\tCount= %d\tMatches= %d\tAccuracy= %.3f%%\tPerformance= %.3f%%\n',length(obj.TR.valInd)  ,obj.Matches_Val  ,obj.Accuracy_Val*100  ,obj.Perform_Val*100);
             fprintf('Test  Result:\tCount= %d\tMatches= %d\tAccuracy= %.3f%%\tPerformance= %.3f%%\n',length(obj.TR.testInd) ,obj.Matches_Test ,obj.Accuracy_Test*100 ,obj.Perform_Test*100);
-            
+            fprintf('====================Train Time: %.3fs====================\n',obj.TrainTime);
         end
     end
 end
