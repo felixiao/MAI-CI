@@ -6,7 +6,7 @@ classdef SingleNetwork
        network
        trainResults
        ResultTable
-       logLevel = 1
+       logLevel = 2
        Path
        TotalTrainTime
    end
@@ -110,18 +110,18 @@ classdef SingleNetwork
             t = tiledlayout(3,2,'TileSpacing','tight','Padding','tight');
             
             nexttile;
-            plot(1:length(obj.trainResults),[obj.trainResults.Perform_Train]*100,'r-o', ...
-                1:length(obj.trainResults),[obj.trainResults.Perform_Val]*100,'g-+', ...
-                1:length(obj.trainResults),[obj.trainResults.Perform_Test]*100,'b-*');
+            plot(1:length(obj.trainResults),[obj.trainResults.Perform_Train],'r-o', ...
+                1:length(obj.trainResults),[obj.trainResults.Perform_Val],'g-+', ...
+                1:length(obj.trainResults),[obj.trainResults.Perform_Test],'b-*');
             xlabel('Iteration');
             ylabel('Performance');
             title('Performance at each iteration');
             legend({'Train','Validation','Test'},'Location','best');
 
             nexttile;
-            plot(1:length(obj.trainResults),[obj.trainResults.Accuracy_Train]*100,'r-o', ...
-                1:length(obj.trainResults),[obj.trainResults.Accuracy_Val]*100,'g-+', ...
-                1:length(obj.trainResults),[obj.trainResults.Accuracy_Test]*100,'b-*');
+            plot(1:length(obj.trainResults),[obj.trainResults.Accuracy_Train],'r-o', ...
+                1:length(obj.trainResults),[obj.trainResults.Accuracy_Val],'g-+', ...
+                1:length(obj.trainResults),[obj.trainResults.Accuracy_Test],'b-*');
             xlabel('Iteration');
             ylabel('Accuracy');
             title(' Accuracy at each iteration');

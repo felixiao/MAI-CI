@@ -8,27 +8,23 @@ classdef CustomNetwork
       TrainTimes           = 3; % default 3
       
       % Pre Train
-
       LearningRates  = [0.001, 0.01, 0.1];        % default 0.01
       Momentums      = [ 0.6, 0.8,  0.99]; % default 0.8
       Num_Epochs     = [500, 1000,  2000];         % default 1000
-      TrainFunctions = ["traingdm", "traingdx","trainscg"]; % default traingdm
+      TrainFunctions = ["trainscg","trainlm","traingdm", "traingdx"]; % default trainscg
       Max_Fails      = [50, 200, 500]; % default 500
-      
       PreTrainNetworks
       PreTrainParameters
       PreTSameParam
       PreTDiffParam
       PreTParamNames
       TotalPreTrainTime
+
       % Datas
       Inputs;
       Outputs;
 
-      % Results
-
       %Net
-      
       Networks
       NetworkType
       Parameters
@@ -41,18 +37,17 @@ classdef CustomNetwork
    methods
        function obj = CustomNetwork(X,T)
            % Custom Network (feedforward)
-           obj.Inputs  = X;
+           obj.Inputs  = X';
            obj.Outputs = T;
            obj.NetworkType = 'FFNN';
            obj.Networks = SingleNetwork();
            obj.PreTrainNetworks = SingleNetwork();
-% Pre training
+            % Pre training
            obj = obj.PreTrainSetup();
-           fprintf('Pretrain Network Count: %d\n',length(obj.PreTrainNetworks));
-% Choose best configuration
-
+           fprintf('===================Pretrain Network Count: %d=================\n',length(obj.PreTrainNetworks));
+            % Choose best configuration
            obj = obj.Setup();
-           fprintf('Network Count: %d\n',length(obj.Networks));
+           fprintf('===================Network Count: %d==========================\n',length(obj.Networks));
        end
        
        function obj = PreTrainSetup(obj)
@@ -62,73 +57,106 @@ classdef CustomNetwork
            obj.PreTDiffParam = struct('LR',[],'MC',[],'EP',[]);
            obj.PreTParamNames = struct('LR',[],'MC',[],'EP',[]);
            obj.PreTParamNames.LR = ["MC6-EP500";"MC6-EP1000";"MC6-EP2000";"MC8-EP500";"MC8-EP1000";"MC8-EP2000";"MC99-EP500" ;"MC99-EP1000" ; "MC99-EP2000"];
-            obj.PreTParamNames.MC = ["LR0001-EP500";"LR0001-EP1000";"LR0001-EP2000";"LR001-EP500";"LR001-EP1000";"LR001-EP2000";"LR01-EP500";"LR01-EP1000";"LR01-EP2000"];
-            obj.PreTParamNames.EP = ["LR0001-MC6";"LR0001-MC8";"LR0001-MC99";"LR001-MC6";"LR001-MC8";"LR001-MC99";"LR01-MC6";"LR01-MC8";"LR01-MC99"];
+           obj.PreTParamNames.MC = ["LR0001-EP500";"LR0001-EP1000";"LR0001-EP2000";"LR001-EP500";"LR001-EP1000";"LR001-EP2000";"LR01-EP500";"LR01-EP1000";"LR01-EP2000"];
+           obj.PreTParamNames.EP = ["LR0001-MC6";"LR0001-MC8";"LR0001-MC99";"LR001-MC6";"LR001-MC8";"LR001-MC99";"LR01-MC6";"LR01-MC8";"LR01-MC99"];
            netindex = 0;
-           for lr = obj.LearningRates
-                for mc = obj.Momentums
-                    for ep = obj.Num_Epochs
-                        netindex = netindex+1;
-                        if obj.logLevel >=1
-                            fprintf('\nSetup Pretrain Network:========================> \n');
+           for trainFcn = obj.TrainFunctions
+               for lr = obj.LearningRates
+                    for mc = obj.Momentums
+                        for ep = obj.Num_Epochs
+    
+                            netindex = netindex+1;
+                            if obj.logLevel >=1
+                                fprintf('\nSetup Pretrain Network:========================> \n');
+                            end
+                            if obj.logLevel >= 2
+                                fprintf('HyperParameters:\n\tLayer [1] TransferFcn=[%s]\n\tLayer [2] TransferFcn=[%s]\n\tCost Function [%s]\n\t[%d] Hidden Units\n\tDivide Into [TrainSet=%d, ValidateSet=%d, TestSet=%d]\n' ...
+                                    ,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3), ...
+                                    numHiddenLayer,obj.Divide_Ratios(divideRatio,1)*100,obj.Divide_Ratios(divideRatio,2)*100,obj.Divide_Ratios(divideRatio,3)*100);
+                            end
+                            net = SingleNetwork(obj.NetworkType,50,'logsig','logsig','mse',0.4,0.2,0.4, ...
+                                trainFcn,ep,mc,lr,500);
+                            
+                            desiredFolder = './PreTrainResults/';
+                            path = strcat(desiredFolder,net.network.name);
+                            if ~exist(path, 'dir')
+                                mkdir(path);
+                            end
+                            net.Path = path;
+                            net.ID   = netindex;
+                            net.Tag  = 'PreTrain';
+                            obj.PreTrainNetworks(netindex) = net;
+                            
+                            if lr == 0.01
+                                obj.PreTSameParam.LR001(end+1) = netindex;
+                            elseif lr == 0.1
+                                obj.PreTSameParam.LR01(end+1) = netindex;
+                            elseif lr == 0.001
+                                obj.PreTSameParam.LR0001(end+1) = netindex;
+                            end
+    
+                            if mc == 0.8
+                                obj.PreTSameParam.MC8(end+1) = netindex;
+                            elseif mc == 0.6
+                                obj.PreTSameParam.MC6(end+1) = netindex;
+                            elseif mc == 0.99
+                                obj.PreTSameParam.MC99(end+1) = netindex;
+                            end
+    
+                            if ep == 1000
+                                obj.PreTSameParam.EP1000(end+1) = netindex;
+                            elseif ep == 500
+                                obj.PreTSameParam.EP500(end+1) = netindex;
+                            elseif ep == 2000
+                                obj.PreTSameParam.EP2000(end+1) = netindex;
+                            end
+    
+                            if obj.logLevel >=1
+                                fprintf('[%d]\tName: %s\n',netindex,obj.PreTrainNetworks(end).network.name);
+                            end
+                            
                         end
-                        if obj.logLevel >= 2
-                            fprintf('HyperParameters:\n\tLayer [1] TransferFcn=[%s]\n\tLayer [2] TransferFcn=[%s]\n\tCost Function [%s]\n\t[%d] Hidden Units\n\tDivide Into [TrainSet=%d, ValidateSet=%d, TestSet=%d]\n' ...
-                                ,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3), ...
-                                numHiddenLayer,obj.Divide_Ratios(divideRatio,1)*100,obj.Divide_Ratios(divideRatio,2)*100,obj.Divide_Ratios(divideRatio,3)*100);
-                        end
-                        net = SingleNetwork(obj.NetworkType,50,'logsig','logsig','mse',0.4,0.2,0.4, ...
-                            'trainscg',ep,mc,lr,500);
-                        
-                        desiredFolder = './PreTrainResults/';
-                        path = strcat(desiredFolder,net.network.name);
-                        if ~exist(path, 'dir')
-                            mkdir(path);
-                        end
-                        net.Path = path;
-                        net.ID   = netindex;
-                        net.Tag  = 'PreTrain';
-                        obj.PreTrainNetworks(netindex) = net;
-                        
-                        if lr == 0.01
-                            obj.PreTSameParam.LR001(end+1) = netindex;
-                        elseif lr == 0.1
-                            obj.PreTSameParam.LR01(end+1) = netindex;
-                        elseif lr == 0.001
-                            obj.PreTSameParam.LR0001(end+1) = netindex;
-                        end
-
-                        if mc == 0.8
-                            obj.PreTSameParam.MC8(end+1) = netindex;
-                        elseif mc == 0.6
-                            obj.PreTSameParam.MC6(end+1) = netindex;
-                        elseif mc == 0.99
-                            obj.PreTSameParam.MC99(end+1) = netindex;
-                        end
-
-                        if ep == 1000
-                            obj.PreTSameParam.EP1000(end+1) = netindex;
-                        elseif ep == 500
-                            obj.PreTSameParam.EP500(end+1) = netindex;
-                        elseif ep == 2000
-                            obj.PreTSameParam.EP2000(end+1) = netindex;
-                        end
-
-                        if obj.logLevel >=1
-                            fprintf('[%d]\tName: %s\n',netindex,obj.PreTrainNetworks(end).network.name);
-                        end
-                        
-                    end
-                end     
+                    end     
+               end
            end
            obj = obj.GroupPreTParam();
        end
-       function obj = PreTrain(obj)
+       function obj = PreTrainAllWith(obj,Param,value)
+            networkInd = [];
+            for i = 1:length(obj.PreTrainNetworks)
+                if Param == "LR" & value == obj.PreTrainNetworks(i).network.trainParam.lr
+                    networkInd(end+1) = i;
+                elseif Param == "MC" & value == obj.PreTrainNetworks(i).network.trainParam.mc
+                    networkInd(end+1) = i;
+                elseif Param == "EP" & value ==  obj.PreTrainNetworks(i).network.trainParam.epochs
+                    networkInd(end+1) = i;
+                elseif Param == "TF" & value == obj.PreTrainNetworks(i).network.trainFcn
+                    networkInd(end+1) = i;
+                end
+            end
+            for index = 1:length(networkInd)
+               if obj.logLevel >=1
+                  fprintf('[%d/%d] ',index,length(networkInd));
+               end
+               obj = obj.PreTrain(networkInd(index));
+           end
+           obj.TotalPreTrainTime = sum([obj.PreTrainNetworks(netwokInd).TotalTrainTime]);
+           if obj.logLevel >=1
+                fprintf('All PreTrain Finished! Time: %.3f\n',obj.TotalPreTrainTime);
+           end
+       end
+       function obj = PreTrain(obj,index)
+            if obj.logLevel >=1
+                fprintf('Pretrain Network Info:  %s',index,length(obj.PreTrainNetworks),obj.PreTrainNetworks(index).network.userdata.note); 
+            end
+            obj.PreTrainNetworks(index) = obj.PreTrainNetworks(index).Train(obj.Inputs,obj.Outputs,obj.TrainTimes);
+       end
+       function obj = PreTrainAll(obj)
             for index = 1:length(obj.PreTrainNetworks)
                 if obj.logLevel >=1
-                    fprintf('[%d/%d] Pretrain Network Info:  %s',index,length(obj.PreTrainNetworks),obj.PreTrainNetworks(index).network.userdata.note); 
+                    fprintf('[%d/%d] ',index,length(obj.PreTrainNetworks),obj.PreTrainNetworks(index).network.userdata.note); 
                 end
-                obj.PreTrainNetworks(index) = obj.PreTrainNetworks(index).Train(obj.Inputs,obj.Outputs,obj.TrainTimes);
+                obj= obj.PreTrain(index);
             end
             obj.TotalPreTrainTime = sum([obj.PreTrainNetworks.TotalTrainTime]);
             if obj.logLevel >=1
@@ -327,7 +355,7 @@ classdef CustomNetwork
                     for divideRatio = 1:length(obj.Divide_Ratios)
                         netindex = netindex+1;
                         if obj.logLevel >=1
-                            fprintf('\nSetup Pretrain Network:========================> \n');
+                            fprintf('\nSetup Train Network:========================> \n');
                         end
                         if obj.logLevel >= 2
                             fprintf('HyperParameters:\n\tLayer [1] TransferFcn=[%s]\n\tLayer [2] TransferFcn=[%s]\n\tCost Function [%s]\n\t[%d] Hidden Units\n\tDivide Into [TrainSet=%d, ValidateSet=%d, TestSet=%d]\n' ...
@@ -335,7 +363,7 @@ classdef CustomNetwork
                                 numHiddenLayer,obj.Divide_Ratios(divideRatio,1)*100,obj.Divide_Ratios(divideRatio,2)*100,obj.Divide_Ratios(divideRatio,3)*100);
                         end
                         net = SingleNetwork(obj.NetworkType,numHiddenLayer,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3),obj.Divide_Ratios(divideRatio,1),obj.Divide_Ratios(divideRatio,2),obj.Divide_Ratios(divideRatio,3), ...
-                            'traingdm',500,0.8,0.01,500);
+                            'trainscg',500,0.8,0.01,500);
                         desiredFolder = './Results/';
                         path = strcat(desiredFolder,net.network.name);
                         if ~exist(path, 'dir')
@@ -374,6 +402,37 @@ classdef CustomNetwork
                         
                     end
                 end
+           end
+           obj = obj.GroupParam();
+       end
+       function obj = TrainAllWith(obj,Param, value)
+            networkInd = [];
+            for i = 1:length(obj.Networks)
+                if Param == 'FCN'
+                    if value == 1 & obj.Networks(i).network.transferFcn{2}=='logsig'
+                        networkInd(end+1) = i;
+                    elseif value ==2 & obj.Networks(i).network.transferFcn{2}=='softmax'
+                        networkInd(end+1) = i;
+                    end
+                elseif Param == 'HU'
+                    if value == size(obj.Networks(i).network.layers{1})
+                        networkInd(end+1) = i;
+                    end
+                elseif Param == 'DR'
+                    if value ==  obj.Networks(i).network.divideParam.trainRatio
+                        networkInd(end+1) = i;
+                    end
+                end
+            end
+            for index = 1:length(networkInd)
+               if obj.logLevel >=1
+                fprintf('[%d/%d] ',index,length(networkInd));
+               end
+               obj = obj.Train(networkInd(index));
+           end
+           obj.TotalTrainTime = sum([obj.Networks(netwokInd).TotalTrainTime]);
+           if obj.logLevel >=1
+                fprintf('All Train Finished! Time: %.3f\n',obj.TotalTrainTime);
            end
        end
        function obj = TrainAll(obj)
