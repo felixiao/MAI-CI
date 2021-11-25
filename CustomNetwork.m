@@ -19,6 +19,7 @@ classdef CustomNetwork
       PreTDiffParam
       PreTParamNames
       TotalPreTrainTime
+      PreTrainTimes  = 1;
 
       % Datas
       Inputs;
@@ -147,14 +148,14 @@ classdef CustomNetwork
        end
        function obj = PreTrain(obj,index)
             if obj.logLevel >=1
-                fprintf('Pretrain Network Info:  %s',index,length(obj.PreTrainNetworks),obj.PreTrainNetworks(index).network.userdata.note); 
+                fprintf('Pretrain Network Info:  %s',obj.PreTrainNetworks(index).network.userdata.note); 
             end
-            obj.PreTrainNetworks(index) = obj.PreTrainNetworks(index).Train(obj.Inputs,obj.Outputs,obj.TrainTimes);
+            obj.PreTrainNetworks(index) = obj.PreTrainNetworks(index).Train(obj.Inputs,obj.Outputs,obj.PreTrainTimes);
        end
-       function obj = PreTrainAll(obj)
-            for index = 1:length(obj.PreTrainNetworks)
+       function obj = PreTrainAll(obj, startindex)
+            for index = startindex:length(obj.PreTrainNetworks)
                 if obj.logLevel >=1
-                    fprintf('[%d/%d] ',index,length(obj.PreTrainNetworks),obj.PreTrainNetworks(index).network.userdata.note); 
+                    fprintf('[%d/%d] ',index,length(obj.PreTrainNetworks)); 
                 end
                 obj= obj.PreTrain(index);
             end
@@ -363,7 +364,7 @@ classdef CustomNetwork
                                 numHiddenLayer,obj.Divide_Ratios(divideRatio,1)*100,obj.Divide_Ratios(divideRatio,2)*100,obj.Divide_Ratios(divideRatio,3)*100);
                         end
                         net = SingleNetwork(obj.NetworkType,numHiddenLayer,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3),obj.Divide_Ratios(divideRatio,1),obj.Divide_Ratios(divideRatio,2),obj.Divide_Ratios(divideRatio,3), ...
-                            'trainscg',500,0.8,0.01,500);
+                            'trainscg',1000,0.99,0.1,500);
                         desiredFolder = './Results/';
                         path = strcat(desiredFolder,net.network.name);
                         if ~exist(path, 'dir')
@@ -435,8 +436,8 @@ classdef CustomNetwork
                 fprintf('All Train Finished! Time: %.3f\n',obj.TotalTrainTime);
            end
        end
-       function obj = TrainAll(obj)
-           for index = 1:length(obj.Networks)
+       function obj = TrainAll(obj,startIndex)
+           for index = startIndex:length(obj.Networks)
                if obj.logLevel >=1
                 fprintf('[%d/%d] ',index,length(obj.Networks));
                end

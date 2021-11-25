@@ -39,8 +39,8 @@ classdef SingleNetwork
                 obj.network.plotFcns{2} = 'ploterrhist';
                 obj.network.plotFcns{3} = 'plotregression';
                 obj.network.plotFcns{4} = 'plotroc';
-                obj.network.trainParam.show= 50;
-                obj.network.trainParam.showWindow= false;
+%                 obj.network.trainParam.show= 50;
+                 obj.network.trainParam.showWindow= false;
 %                 obj.network.trainParam.showCommandLine = true;
 
                 obj.network.performFcn= performFcn; % crossentropy, mse
@@ -63,7 +63,7 @@ classdef SingleNetwork
             for t = 1:times
                 obj.network = init(obj.network);
                 tic
-                [obj.network,tr,Y,E] = train(obj.network,X,T);
+                [obj.network,tr,Y,E] = train(obj.network,X,T,'useParallel','yes');
                 obj.trainResults(t) = TrainResult(T,tr,Y,toc);
                 if obj.logLevel >=2
                     fprintf('====================[%d] Iteration====================\n',t);
