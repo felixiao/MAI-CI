@@ -5,7 +5,7 @@ classdef CustomNetwork
       Functions    = ["logsig", "logsig", "mse"; "logsig", "softmax", "crossentropy"]; % default logsig logsig mse
       Num_HiddenLayerUnits = [50,200,500];% default 50
       Divide_Ratios        = [0.4,0.2,0.4; 0.8,0.1,0.1; 0.1,0.1,0.8]; %default 0.4 0.2 0.4
-      TrainTimes           = 1; % default 3
+      TrainTimes           = 3; % default 3
       
       % Pre Train
 
@@ -17,21 +17,24 @@ classdef CustomNetwork
       
       PreTrainNetworks
       PreTrainParameters
-      PreTSameParam;
-      PreTDiffParam;
-      PreTParamNames;
-      TotalPreTrainTime;
+      PreTSameParam
+      PreTDiffParam
+      PreTParamNames
+      TotalPreTrainTime
       % Datas
-      Inputs
-      Outputs
+      Inputs;
+      Outputs;
 
       % Results
 
       %Net
       
-
       Networks
       NetworkType
+      Parameters
+      SameParam
+      DiffParam
+      ParamNames
       TotalTrainTime
       logLevel = 1
    end
@@ -313,6 +316,12 @@ classdef CustomNetwork
        
        function obj = Setup(obj)
            netindex = 0;
+           obj.SameParam = struct('FCN1',[],'FCN2',[], ...
+                'HU50',[],'HU100',[],'HU200',[], ...
+                'DR1',[],'DR2',[],'DR3',[]);
+           obj.DiffParam = struct('FCN',[],'HU',[],'DR',[]);
+           obj.ParamNames = struct('FCN',[],'HU',[],'DR',[]);
+
            for transferFcnIdx = 1:obj.Functions.size(1)
                 for numHiddenLayer = obj.Num_HiddenLayerUnits
                     for divideRatio = 1:length(obj.Divide_Ratios)
@@ -336,7 +345,29 @@ classdef CustomNetwork
                         net.ID   = netindex;
                         net.Tag  = 'Train';
                         obj.Networks(netindex) = net;
-            
+                        
+                        if transferFcnIdx == 1
+                            obj.SameParam.FCN1(end+1) = netindex;
+                        elseif transferFcnIdx == 2
+                            obj.SameParam.FCN2(end+1) = netindex;
+                        end
+
+                        if numHiddenLayer == 50
+                            obj.SameParam.HU50(end+1) = netindex;
+                        elseif numHiddenLayer == 100
+                            obj.SameParam.HU100(end+1) = netindex;
+                        elseif numHiddenLayer == 200
+                            obj.SameParam.HU200(end+1) = netindex;
+                        end
+
+                        if divideRatio == 1
+                            obj.SameParam.DR1(end+1) = netindex;
+                        elseif divideRatio == 2
+                            obj.SameParam.DR2(end+1) = netindex;
+                        elseif divideRatio == 3
+                            obj.SameParam.DR3(end+1) = netindex;
+                        end
+
                         if obj.logLevel >=1
                             fprintf('[%d]\tName: %s\n',netindex,obj.Networks(end).network.name);
                         end
@@ -363,6 +394,35 @@ classdef CustomNetwork
            end
            obj.Networks(index) = obj.Networks(index).Train(obj.Inputs,obj.Outputs,obj.TrainTimes);
        end
-       
+       function obj = GroupParam(obj)
+            % FCN
+            HU50_DR1 = [];
+            HU50_DR2 = [];
+            HU50_DR3 = [];
+            HU100_DR1 = [];
+            HU100_DR2 = [];
+            HU100_DR3 = [];
+            HU200_DR1 = [];
+            HU200_DR2 = [];
+            HU200_DR3 = [];
+
+            % HU
+            FCN1_DR1 =[];
+            FCN1_DR2 =[];
+            FCN1_DR3 =[];
+            FCN2_DR1 =[];
+            FCN2_DR2 =[];
+            FCN2_DR3 =[];
+
+            % DR
+            FCN1_HU50 =[];
+            FCN1_HU100 =[];
+            FCN1_HU200 =[];
+            FCN2_HU50 =[];
+            FCN2_HU100 =[];
+            FCN2_HU200 =[];
+
+
+       end
    end
 end
