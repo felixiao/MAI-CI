@@ -61,6 +61,9 @@ classdef CustomNetwork
                 'EP1000',[],'EP500',[],'EP2000',[]);
            obj.PreTDiffParam = struct('LR',[],'MC',[],'EP',[]);
            obj.PreTParamNames = struct('LR',[],'MC',[],'EP',[]);
+           obj.PreTParamNames.LR = ["MC6-EP500";"MC6-EP1000";"MC6-EP2000";"MC8-EP500";"MC8-EP1000";"MC8-EP2000";"MC99-EP500" ;"MC99-EP1000" ; "MC99-EP2000"];
+            obj.PreTParamNames.MC = ["LR0001-EP500";"LR0001-EP1000";"LR0001-EP2000";"LR001-EP500";"LR001-EP1000";"LR001-EP2000";"LR01-EP500";"LR01-EP1000";"LR01-EP2000"];
+            obj.PreTParamNames.EP = ["LR0001-MC6";"LR0001-MC8";"LR0001-MC99";"LR001-MC6";"LR001-MC8";"LR001-MC99";"LR01-MC6";"LR01-MC8";"LR01-MC99"];
            netindex = 0;
            for lr = obj.LearningRates
                 for mc = obj.Momentums
@@ -131,12 +134,6 @@ classdef CustomNetwork
             if obj.logLevel >=1
                 fprintf('All PreTrain Finished! Time: %.3f\n',obj.TotalPreTrainTime);
            end
-       end
-       
-       function obj = ShowPreTResults(obj)
-            obj = ComparePreTResults(obj,obj.PreTDiffParam.LR,'LR',obj.PreTParamNames.LR(:,1));
-            obj = ComparePreTResults(obj,obj.PreTDiffParam.MC,'MC',obj.PreTParamNames.MC(:,1));
-            obj = ComparePreTResults(obj,obj.PreTDiffParam.EP,'EP',obj.PreTParamNames.EP(:,1));
        end
        function obj = GroupPreTParam(obj)
             LR8_1000 = [];
@@ -246,10 +243,6 @@ classdef CustomNetwork
             obj.PreTDiffParam.LR = [LR6_500;LR6_1000;LR6_2000;LR8_500;LR8_1000;LR8_2000;LR99_500 ;LR99_1000 ; LR99_2000];
             obj.PreTDiffParam.MC = [MC0001_500;MC0001_1000;MC0001_2000;MC001_500;MC001_1000;MC001_2000;MC01_500;MC01_1000;MC01_2000];
             obj.PreTDiffParam.EP = [EP0001_6;EP0001_8;EP0001_99;EP001_6;EP001_8;EP001_99;EP01_6;EP01_8;EP01_99];
-            
-            obj.PreTParamNames.LR = ["MC6-EP500";"MC6-EP1000";"MC6-EP2000";"MC8-EP500";"MC8-EP1000";"MC8-EP2000";"MC99-EP500" ;"MC99-EP1000" ; "MC99-EP2000"];
-            obj.PreTParamNames.MC = ["LR0001-EP500";"LR0001-EP1000";"LR0001-EP2000";"LR001-EP500";"LR001-EP1000";"LR001-EP2000";"LR01-EP500";"LR01-EP1000";"LR01-EP2000"];
-            obj.PreTParamNames.EP = ["LR0001-MC6";"LR0001-MC8";"LR0001-MC99";"LR001-MC6";"LR001-MC8";"LR001-MC99";"LR01-MC6";"LR01-MC8";"LR01-MC99"];
        end
        function obj = ComparePreTResults(obj,results,parameter,names)
             XAxis =[];
@@ -313,7 +306,12 @@ classdef CustomNetwork
             saveas(gca,sprintf('PreTrainResults/Diff-%s-Accuracy.jpg',parameter));
             close all;
        end
-       
+       function obj = ShowPreTResults(obj)
+            obj = ComparePreTResults(obj,obj.PreTDiffParam.LR,'LR',obj.PreTParamNames.LR(:,1));
+            obj = ComparePreTResults(obj,obj.PreTDiffParam.MC,'MC',obj.PreTParamNames.MC(:,1));
+            obj = ComparePreTResults(obj,obj.PreTDiffParam.EP,'EP',obj.PreTParamNames.EP(:,1));
+       end
+
        function obj = Setup(obj)
            netindex = 0;
            obj.SameParam = struct('FCN1',[],'FCN2',[], ...
@@ -321,7 +319,9 @@ classdef CustomNetwork
                 'DR1',[],'DR2',[],'DR3',[]);
            obj.DiffParam = struct('FCN',[],'HU',[],'DR',[]);
            obj.ParamNames = struct('FCN',[],'HU',[],'DR',[]);
-
+            obj.ParamNames.FCN = ["HU50-DR1";"HU50-DR2";"HU50-DR3";"HU100-DR1";"HU100-DR2";"HU100-DR3";"HU200-DR1";"HU200-DR2";"HU200-DR3"];
+            obj.ParamNames.HU = ["FCN1-DR1";"FCN1-DR2";"FCN1-DR3";"FCN2-DR1";"FCN2-DR2";"FCN2-DR3"];
+            obj.ParamNames.DR =  ["FCN1-HU50";"FCN1-HU100";"FCN1-HU200";"FCN2-HU50";"FCN2-HU100";"FCN2-HU200"];
            for transferFcnIdx = 1:obj.Functions.size(1)
                 for numHiddenLayer = obj.Num_HiddenLayerUnits
                     for divideRatio = 1:length(obj.Divide_Ratios)
@@ -421,8 +421,138 @@ classdef CustomNetwork
             FCN2_HU50 =[];
             FCN2_HU100 =[];
             FCN2_HU200 =[];
+            
+            for index = 1:length(obj.Networks)
+                if any(obj.SameParam.FCN1(:) == index)
+                    if any(obj.SameParam.HU50(:) == index)
+                        FCN1_HU50(end+1) = index;
+                    elseif any(obj.SameParam.HU100(:) == index)
+                        FCN1_HU100(end+1) = index;
+                    elseif any(obj.SameParam.HU200(:) == index)
+                        FCN1_HU200(end+1) = index;
+                    end
+                    if any(obj.SameParam.DR1(:) == index)
+                        FCN1_DR1(end+1) = index;
+                    elseif any(obj.SameParam.DR2(:) == index)
+                        FCN1_DR2(end+1) = index;
+                    elseif any(obj.SameParam.DR3(:) == index)
+                        FCN1_DR3(end+1) = index;
+                    end
+                elseif any(obj.SameParam.FCN2(:) == index)
+                    if any(obj.SameParam.HU50(:) == index)
+                        FCN2_HU50(end+1) = index;
+                    elseif any(obj.SameParam.HU100(:) == index)
+                        FCN2_HU100(end+1) = index;
+                    elseif any(obj.SameParam.HU200(:) == index)
+                        FCN2_HU200(end+1) = index;
+                    end
+                    if any(obj.SameParam.DR1(:) == index)
+                        FCN2_DR1(end+1) = index;
+                    elseif any(obj.SameParam.DR2(:) == index)
+                        FCN2_DR2(end+1) = index;
+                    elseif any(obj.SameParam.DR3(:) == index)
+                        FCN2_DR3(end+1) = index;
+                    end
+                end
+                if any(obj.SameParam.HU50(:) == index)
+                    if any(obj.SameParam.DR1(:) == index)
+                        HU50_DR1(end+1) = index;
+                    elseif any(obj.SameParam.DR2(:) == index)
+                        HU50_DR2(end+1) = index;
+                    elseif any(obj.SameParam.DR3(:) == index)
+                        HU50_DR3(end+1) = index;
+                    end
+                elseif any(obj.SameParam.HU100(:) == index)
+                    if any(obj.SameParam.DR1(:) == index)
+                        HU100_DR1(end+1) = index;
+                    elseif any(obj.SameParam.DR2(:) == index)
+                        HU100_DR2(end+1) = index;
+                    elseif any(obj.SameParam.DR3(:) == index)
+                        HU100_DR3(end+1) = index;
+                    end
+                elseif any(obj.SameParam.HU200(:) == index)
+                    if any(obj.SameParam.DR1(:) == index)
+                        HU200_DR1(end+1) = index;
+                    elseif any(obj.SameParam.DR2(:) == index)
+                        HU200_DR2(end+1) = index;
+                    elseif any(obj.SameParam.DR3(:) == index)
+                        HU200_DR3(end+1) = index;
+                    end
+                end
 
+            end
+            obj.DiffParam.FCN = [HU50_DR1;HU50_DR2;HU50_DR3;HU100_DR1;HU100_DR2;HU100_DR3;HU200_DR1 ;HU200_DR2; HU200_DR3];
+            obj.DiffParam.HU = [FCN1_DR1;FCN1_DR2;FCN1_DR3;FCN2_DR1;FCN2_DR2;FCN2_DR3];
+            obj.DiffParam.DR = [FCN1_HU50;FCN1_HU100;FCN1_HU200;FCN2_HU50;FCN2_HU100;FCN2_HU200];
+            
 
+       end
+       function obj = CompareResult(obj,results,parameter,names)
+            XAxis =[];
+            if parameter == 'FCN'
+                XAxis = obj.LearningRates;
+            elseif parameter =='HU'
+                XAxis = obj.Momentums;
+            elseif parameter =='DR'
+                XAxis = obj.Num_Epochs;
+            end
+
+            figure(1);
+            t1 = tiledlayout(3,3,'TileSpacing','tight','Padding','tight');
+            for r = 1:size(results,1)
+                perfTrain =[];
+                perfVal   =[];
+                perfTest  =[];
+    
+                for i = results(r,:)
+                    perfTrain(end+1) = obj.Networks(i).ResultTable.Performance(1);
+                    perfVal(end+1)   = obj.Networks(i).ResultTable.Performance(2);
+                    perfTest(end+1)  = obj.Networks(i).ResultTable.Performance(3);
+                    
+                end
+                nexttile;
+                plot(XAxis,perfTrain*100,'r-o', ...
+                    XAxis,perfVal*100,'g-+', ...
+                    XAxis,perfTest*100,'b-*');
+                xlabel(parameter);
+                ylabel('Performance');
+                title(sprintf('%s',names(r)));
+                legend({'Train','Validation','Test'},'Location','best');
+                hold on;
+            end
+            title(t1,sprintf('Performance at different %s ',parameter));
+            saveas(gca,sprintf('Results/Diff-%s-Performance.jpg',parameter));
+            close all;
+
+            figure(2);
+            t2 = tiledlayout(3,3,'TileSpacing','tight','Padding','tight');
+            for r = 1:size(results,1)
+                accTrain  =[];
+                accVal    =[];
+                accTest   =[];
+                for i = results(r,:)
+                    accTrain(end+1)  = obj.Networks(i).ResultTable.Accuracy(1);
+                    accVal(end+1)    = obj.Networks(i).ResultTable.Accuracy(2);
+                    accTest(end+1)   = obj.Networks(i).ResultTable.Accuracy(3);
+                end
+                nexttile;
+                plot(XAxis,accTrain*100,'r-o', ...
+                    XAxis,accVal*100,'g-+', ...
+                    XAxis,accTest*100,'b-*');
+                xlabel(parameter);
+                ylabel('Accuracy');
+                title(sprintf('%s',names(r)));
+                legend({'Train','Validation','Test'},'Location','best');
+                hold on;
+            end
+            title(t2,sprintf('Accuracy at different %s ',parameter));
+            saveas(gca,sprintf('Results/Diff-%s-Accuracy.jpg',parameter));
+            close all;
+       end
+       function obj = ShowResults(obj)
+            obj = CompareResult(obj,obj.DiffParam.FCN,'FCN',obj.ParamNames.FCN(:,1));
+            obj = CompareResult(obj,obj.DiffParam.HU,'HU',obj.ParamNames.HU(:,1));
+            obj = CompareResult(obj,obj.DiffParam.DR,'DR',obj.ParamNames.DR(:,1));
        end
    end
 end
