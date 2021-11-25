@@ -11,7 +11,7 @@ classdef CustomNetwork
       LearningRates  = [0.001, 0.01, 0.1];        % default 0.01
       Momentums      = [ 0.6, 0.8,  0.99]; % default 0.8
       Num_Epochs     = [500, 1000,  2000];         % default 1000
-      TrainFunctions = ["trainscg","trainlm","traingdm", "traingdx"]; % default trainscg
+      TrainFunctions = ["trainscg"]; % default trainscg
       Max_Fails      = [50, 200, 500]; % default 500
       PreTrainNetworks
       PreTrainParameters
@@ -37,7 +37,7 @@ classdef CustomNetwork
    methods
        function obj = CustomNetwork(X,T)
            % Custom Network (feedforward)
-           obj.Inputs  = X';
+           obj.Inputs  = X;
            obj.Outputs = T;
            obj.NetworkType = 'FFNN';
            obj.Networks = SingleNetwork();
@@ -74,7 +74,7 @@ classdef CustomNetwork
                                     ,obj.Functions(transferFcnIdx,1),obj.Functions(transferFcnIdx,2),obj.Functions(transferFcnIdx,3), ...
                                     numHiddenLayer,obj.Divide_Ratios(divideRatio,1)*100,obj.Divide_Ratios(divideRatio,2)*100,obj.Divide_Ratios(divideRatio,3)*100);
                             end
-                            net = SingleNetwork(obj.NetworkType,50,'logsig','logsig','mse',0.4,0.2,0.4, ...
+                            net = SingleNetwork(obj.NetworkType,50,'logsig','softmax','crossentropy',0.4,0.2,0.4, ...
                                 trainFcn,ep,mc,lr,500);
                             
                             desiredFolder = './PreTrainResults/';
