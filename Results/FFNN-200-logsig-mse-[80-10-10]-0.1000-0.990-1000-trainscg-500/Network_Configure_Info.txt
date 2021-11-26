@@ -1,0 +1,13 @@
+
+FeedForward Neural Network
+	Hidden Units 	= 200
+	TransferFcn1 	= logsig
+	TransferFcn2 	= logsig
+	DivideRatio 	= [80-10-10]
+	PerformFcn 	= mse
+	TrainFcn 	= trainscg
+	Epochs 		= 1000
+	LearningRate 	= 0.100
+	Momentum 	= 0.990
+	MaxFail		= 500
+

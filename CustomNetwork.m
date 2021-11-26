@@ -423,8 +423,8 @@ classdef CustomNetwork
                     elseif value ==2 & obj.Networks(i).network.transferFcn{2}=='softmax'
                         networkInd(end+1) = i;
                     end
-                elseif Param == 'HU'
-                    if value == size(obj.Networks(i).network.layers{1})
+                elseif Param == "HU"
+                    if value ==obj.Networks(i).network.numWeightElements
                         networkInd(end+1) = i;
                     end
                 elseif Param == 'DR'
@@ -461,6 +461,127 @@ classdef CustomNetwork
                 fprintf('Network Info: %s',obj.Networks(index).network.userdata.note); 
            end
            obj.Networks(index) = obj.Networks(index).Train(obj.Inputs,obj.Outputs,obj.TrainTimes);
+       end
+       function obj = ShowAllResult(obj)
+            figure(1);
+            param = 'Hidden Units';
+            t1 = tiledlayout(4,4,'TileSpacing','tight','Padding','loose');
+       
+            obj = ShowResult(obj,[1,4,7],'logsig-mse-[4/2/4]',obj.Num_HiddenLayerUnits,param,1,8);
+            obj = ShowResult(obj,[2,5,8],'logsig-mse-[8/1/1]',obj.Num_HiddenLayerUnits,param,2,8);
+            obj = ShowResult(obj,[3,6,9],'logsig-mse-[1/1/8]',obj.Num_HiddenLayerUnits,param,3,8);
+            
+            obj = ShowResult(obj,[10,13,16],'softmax-csetp-[4/2/4]',obj.Num_HiddenLayerUnits,param,5,8);
+            obj = ShowResult(obj,[11,14,17],'softmax-csetp-[8/1/1]',obj.Num_HiddenLayerUnits,param,6,8);
+            obj = ShowResult(obj,[12,15,18],'softmax-csetp-[1/1/8]',obj.Num_HiddenLayerUnits,param,7,8);
+            
+            title(t1,sprintf('Result at different %s',param));
+            nexttile(4, [4 1]);
+            plot(1, nan,'r-o',2, nan,'g-+',3, nan,'b-*');% plot nans (hack to generate correct legend but plot no data)
+            legend({'Train','Validation','Test'}, 'Location', 'layout'); 
+            axis off
+
+            saveas(gca,sprintf('Results/Diff-%s.fig',param));
+            f= gcf;
+            exportgraphics(gcf,sprintf('Results/Diff-%s.png',param),'Resolution',300);
+            exportgraphics(f,sprintf('Results/Diff-%s.pdf',param),'ContentType','vector','BackgroundColor','none')
+            close all;
+            
+            figure(2);
+            param = 'TransferFcn';
+            t2 = tiledlayout(6,4,'TileSpacing','tight','Padding','loose');
+       
+            obj = ShowResult(obj,[1,10],'[HU50]-[4/2/4]',[1,2],param,1,12);
+            obj = ShowResult(obj,[2,11],'[HU50]-[8/1/1]',[1,2],param,2,12);
+            obj = ShowResult(obj,[3,12],'[HU50]-[1/1/8]',[1,2],param,3,12);
+            
+            obj = ShowResult(obj,[4,13],'[HU200]-[4/2/4]',[1,2],param,5,12);
+            obj = ShowResult(obj,[5,14],'[HU200]-[8/1/1]',[1,2],param,6,12);
+            obj = ShowResult(obj,[6,15],'[HU200]-[1/1/8]',[1,2],param,7,12);
+
+            obj = ShowResult(obj,[7,16],'[HU500]-[4/2/4]',[1,2],param,9,12);
+            obj = ShowResult(obj,[8,17],'[HU500]-[8/1/1]',[1,2],param,10,12);
+            obj = ShowResult(obj,[9,18],'[HU500]-[1/1/8]',[1,2],param,11,12);
+            
+            title(t2,sprintf('Result at different %s',param));
+            nexttile(4, [6 1]);
+            plot(1, nan,'r-o',2, nan,'g-+',3, nan,'b-*'); % plot nans (hack to generate correct legend but plot no data)
+            legend({'Train','Validation','Test'}, 'Location', 'layout'); 
+            axis off
+
+            saveas(gca,sprintf('Results/Diff-%s.fig',param));
+            f= gcf;
+            exportgraphics(gcf,sprintf('Results/Diff-%s.png',param),'Resolution',300);
+            exportgraphics(f,sprintf('Results/Diff-%s.pdf',param),'ContentType','vector','BackgroundColor','none')
+            close all;
+
+            figure(3);
+            param = 'DivideRatio';
+            t3 = tiledlayout(4,4,'TileSpacing','tight','Padding','compact');
+       
+            obj = ShowResult(obj,[1,2,3],'[HU50]-logsig-mse',[1,2,3],param,1,8);
+            obj = ShowResult(obj,[4,5,6],'[HU200]-logsig-mse',[1,2,3],param,2,8);
+            obj = ShowResult(obj,[7,8,9],'[HU500]-logsig-mse',[1,2,3],param,3,8);
+            
+            obj = ShowResult(obj,[10,11,12],'[HU50]-softmax-csetp',[1,2,3],param,5,8);
+            obj = ShowResult(obj,[13,14,15],'[HU200]-softmax-csetp',[1,2,3],param,6,8);
+            obj = ShowResult(obj,[16,17,18],'[HU500]-softmax-csetp',[1,2,3],param,7,8);
+            
+            title(t3,sprintf('Result at different %s',param));
+            nexttile(4, [4 1]);
+            plot(1, nan,'r-o',2, nan,'g-+',3, nan,'b-*'); % plot nans (hack to generate correct legend but plot no data)
+            legend({'Train','Validation','Test'}, 'Location', 'layout'); 
+            axis off
+
+            saveas(gca,sprintf('Results/Diff-%s.fig',param));
+            f= gcf;
+            exportgraphics(gcf,sprintf('Results/Diff-%s.png',param),'Resolution',300);
+            exportgraphics(f,sprintf('Results/Diff-%s.pdf',param),'ContentType','vector','BackgroundColor','none')
+            close all;
+
+       end
+       function obj = ShowResult(obj,indexes,name,xaxis,param,i,interval)
+            perfTrain =[];
+            perfVal   =[];
+            perfTest  =[];
+            
+            accTrain  =[];
+            accVal    =[];
+            accTest   =[];
+
+            for ind = indexes
+                file = sprintf('Results/%s/result.mat',obj.Networks(ind).network.name);
+                rt = load(file).Table;
+                perfTrain(end+1) = rt.Performance(1);
+                perfVal(end+1)   = rt.Performance(2);
+                perfTest(end+1)  = rt.Performance(3);
+                accTrain(end+1)  = rt.Accuracy(1);
+                accVal(end+1)  = rt.Accuracy(2);
+                accTest(end+1)  = rt.Accuracy(3);
+            end
+
+            nexttile(i);
+            plot(xaxis,perfTrain*100,'r-o', ...
+                xaxis,perfVal*100,'g-+', ...
+                xaxis,perfTest*100,'b-*');
+            title(name);
+            if mod(i,4) ==1
+                ylabel('Performance');
+            end
+            
+
+            nexttile(i+interval);
+            plot(xaxis,accTrain*100,'r-o', ...
+                xaxis,accVal*100,'g-+', ...
+                xaxis,accTest*100,'b-*');
+            title(name);
+            if i/4 >= interval/4 -1
+                xlabel(param);
+            end
+            if mod(i,4) ==1
+                ylabel('Accuracy');
+            end
+            
        end
        function obj = GroupParam(obj)
             % FCN
@@ -621,6 +742,38 @@ classdef CustomNetwork
             obj = CompareResult(obj,obj.DiffParam.FCN,'FCN',obj.ParamNames.FCN(:,1));
             obj = CompareResult(obj,obj.DiffParam.HU,'HU',obj.ParamNames.HU(:,1));
             obj = CompareResult(obj,obj.DiffParam.DR,'DR',obj.ParamNames.DR(:,1));
+       end
+       function obj = GetBestResult(obj,param, value)
+           indx = [];
+           for i = 1:length(obj.Networks)
+            if param == "FCN" & obj.Functions(value,3) == obj.Networks(i).network.performFcn
+                indx(end+1) = i;
+            elseif param == "HU" & value == obj.Networks(i).network.numWeightElements
+                indx(end+1) = i;
+            elseif param =="DR" & value == obj.Networks(i).network.divideParam.trainRatio
+                indx(end+1) = i;
+            end
+           end
+           perfTrain =[];
+            perfVal   =[];
+            perfTest  =[];
+            
+            accTrain  =[];
+            accVal    =[];
+            accTest   =[];
+
+            for ind = indx
+                file = sprintf('Results/%s/result.mat',obj.Networks(ind).network.name);
+                rt = load(file).Table;
+                perfTrain(end+1) = rt.Performance(1);
+                perfVal(end+1)   = rt.Performance(2);
+                perfTest(end+1)  = rt.Performance(3);
+                accTrain(end+1)  = rt.Accuracy(1);
+                accVal(end+1)  = rt.Accuracy(2);
+                accTest(end+1)  = rt.Accuracy(3);
+            end
+           [maxV,maxI] = max(accTest);
+           fprintf('%s\nTrain:\t%.3f\tVal:\t%.3f\tTest:\t%.3f\n',obj.Networks(indx(maxI)).network.userdata.note,accTrain(maxI),accVal(maxI),accTest(maxI));
        end
    end
 end
