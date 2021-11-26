@@ -63,7 +63,7 @@ classdef SingleNetwork
             for t = 1:times
                 obj.network = init(obj.network);
                 tic
-                [obj.network,tr,Y,E] = train(obj.network,X,T,'useParallel','yes');
+                [obj.network,tr,Y,E] = train(obj.network,X,T);
                 obj.trainResults(t) = TrainResult(T,tr,Y,toc);
                 if obj.logLevel >=2
                     fprintf('====================[%d] Iteration====================\n',t);

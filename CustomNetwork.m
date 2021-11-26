@@ -9,8 +9,8 @@ classdef CustomNetwork
       
       % Pre Train
       LearningRates  = [0.001, 0.01, 0.1];        % default 0.01
-      Momentums      = [ 0.6, 0.8,  0.99]; % default 0.8
-      Num_Epochs     = [500, 1000,  2000];         % default 1000
+      Momentums      = [0.6, 0.8, 0.99]; % default 0.8
+      Num_Epochs     = [500, 1000,2000];         % default 1000
       TrainFunctions = ["trainscg"]; % default trainscg
       Max_Fails      = [50, 200, 500]; % default 500
       PreTrainNetworks
@@ -300,10 +300,14 @@ classdef CustomNetwork
                 plot(XAxis,perfTrain*100,'r-o', ...
                     XAxis,perfVal*100,'g-+', ...
                     XAxis,perfTest*100,'b-*');
-                xlabel(parameter);
-                ylabel('Performance');
+                if r/3 >2
+                    xlabel(parameter);
+                end
+                if mod(r,3) ==1
+                    ylabel('Performance');
+                end
                 title(sprintf('%s',names(r)));
-                legend({'Train','Validation','Test'},'Location','best');
+%                 legend({'Train','Validation','Test'},'Location','best');
                 hold on;
             end
             title(t1,sprintf('Performance at different %s ',parameter));
@@ -325,10 +329,14 @@ classdef CustomNetwork
                 plot(XAxis,accTrain*100,'r-o', ...
                     XAxis,accVal*100,'g-+', ...
                     XAxis,accTest*100,'b-*');
-                xlabel(parameter);
-                ylabel('Accuracy');
+                if r/3 >2
+                    xlabel(parameter);
+                end
+                if mod(r,3)==1
+                    ylabel('Accuracy');
+                end
                 title(sprintf('%s',names(r)));
-                legend({'Train','Validation','Test'},'Location','best');
+%                 legend({'Train','Validation','Test'},'Location','best');
                 hold on;
             end
             title(t2,sprintf('Accuracy at different %s ',parameter));
